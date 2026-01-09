@@ -1,12 +1,26 @@
 import React, { useState, useRef } from 'react';
-import { Camera, Upload, Sparkles, Eye, Smile, Users } from 'lucide-react';
+import { useDispatch, useSelector } from 'react-redux';
+import { Camera, Upload, Sparkles, Eye, Smile, LogOut, CreditCard } from 'lucide-react';
+import Login from './components/Login';
+import Signup from './components/Signup';
+import SubscriptionPlans from './components/SubscriptionPlans';
+import { logout } from './redux/authSlice';
+import { decrementAnalyses } from './redux/subscriptionSlice';
 
-export default function FaceForward() {
+function FaceForward() {
   const [selectedImage, setSelectedImage] = useState(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [results, setResults] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [currentView, setCurrentView] = useState('analyze'); // 'analyze', 'subscription'
   const fileInputRef = useRef(null);
+  
+  // Redux hooks
+  const dispatch = useDispatch();
+  const { user } = useSelector((state) => state.auth);
+  const { analysesRemaining, plan, maxAnalysesPerMonth } = useSelector((state) => state.subscription);
+  const [showAuthModal, setShowAuthModal] = useState(!user);
+  const [authMode, setAuthMode] = useState('login'); // 'login' or 'signup'
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
@@ -46,28 +60,126 @@ export default function FaceForward() {
   };
 
   const analyzeImage = () => {
+    if (analysesRemaining <= 0) {
+      alert('You\'ve reached your monthly limit. Upgrade your plan!');
+      setCurrentView('subscription');
+      return;
+    }
+    
     setAnalyzing(true);
-    // TODO: Your backend team will implement the API call here
-    // Example:
-    // const formData = new FormData();
-    // formData.append('image', selectedImage);
-    // fetch('/api/analyze', { method: 'POST', body: formData })
-    //   .then(res => res.json())
-    //   .then(data => setResults(data))
-    //   .finally(() => setAnalyzing(false));
+    dispatch(decrementAnalyses());
+    
+    // Simulate API call
+    setTimeout(() => {
+      setResults({
+        message: 'Analysis Complete',
+        status: 'Backend ra ML ko Integration baki',
+      });
+      setAnalyzing(false);
+    }, 2000);
   };
+
+  const handleLogout = () => {
+    dispatch(logout());
+    setShowAuthModal(true);
+    setAuthMode('login');
+    setCurrentView('analyze');
+  };
+
+  // Show auth modal if not logged in
+  if (showAuthModal && !user) {
+    if (authMode === 'login') {
+      return (
+        <Login
+          onSwitchToSignup={() => setAuthMode('signup')}
+        />
+      );
+    } else {
+      return (
+        <Signup
+          onSwitchToLogin={() => setAuthMode('login')}
+        />
+      );
+    }
+  }
+
+  // Show subscription plans if that view is selected
+  if (currentView === 'subscription') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50">
+        {/* Header */}
+        <header className="bg-white shadow-sm sticky top-0 z-50">
+          <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between">
+              <button
+                onClick={() => setCurrentView('analyze')}
+                className="flex items-center space-x-2 hover:opacity-70"
+              >
+                <Sparkles className="w-8 h-8 text-purple-600" />
+                <h1 className="text-2xl font-bold text-gray-900">FaceForward</h1>
+              </button>
+              <div className="flex items-center space-x-4">
+                <span className="text-sm font-medium text-gray-700">{user?.name}</span>
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center space-x-2 px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <LogOut className="w-5 h-5" />
+                  <span>Logout</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </header>
+        <SubscriptionPlans />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50">
       {/* Header */}
-      <header className="bg-white shadow-sm">
+      <header className="bg-white shadow-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
+            <button
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              className="flex items-center space-x-2 hover:opacity-70 transition-opacity"
+            >
               <Sparkles className="w-8 h-8 text-purple-600" />
               <h1 className="text-2xl font-bold text-gray-900">FaceForward</h1>
-            </div>
+            </button>
             
+            <div className="flex items-center space-x-4">
+              {/* Plan Badge */}
+              <div className="hidden sm:block px-4 py-2 bg-purple-50 rounded-lg">
+                <p className="text-xs text-gray-600">Plan: <span className="font-bold text-purple-600 capitalize">{plan}</span></p>
+                {plan !== 'enterprise' && (
+                  <p className="text-xs text-gray-600">Analyses: <span className="font-bold">{analysesRemaining}/{maxAnalysesPerMonth}</span></p>
+                )}
+              </div>
+
+              {/* User Menu */}
+              <div className="flex items-center space-x-3">
+                <span className="hidden sm:inline text-sm font-medium text-gray-700">{user?.name}</span>
+                
+                <button
+                  onClick={() => setCurrentView('subscription')}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  title="Upgrade plan"
+                >
+                  <CreditCard className="w-5 h-5 text-gray-600" />
+                </button>
+
+                <button
+                  onClick={handleLogout}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  title="Logout"
+                >
+                  <LogOut className="w-5 h-5 text-gray-600" />
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </header>
@@ -179,61 +291,12 @@ export default function FaceForward() {
             )}
 
             {results && !analyzing && (
-              <div className="space-y-6">
-                {/* Facial Features Detected */}
-                <div className="bg-purple-50 rounded-lg p-4">
-                  <h4 className="font-semibold text-purple-900 mb-3">Detected Features</h4>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-white rounded p-3">
-                      <p className="text-xs text-gray-600">Face Shape</p>
-                      <p className="font-semibold text-gray-900">{results.faceShape}</p>
-                    </div>
-                    <div className="bg-white rounded p-3">
-                      <p className="text-xs text-gray-600">Eye Type</p>
-                      <p className="font-semibold text-gray-900">{results.eyeType}</p>
-                    </div>
-                    <div className="bg-white rounded p-3">
-                      <p className="text-xs text-gray-600">Lip Shape</p>
-                      <p className="font-semibold text-gray-900">{results.lipShape}</p>
-                    </div>
-                    <div className="bg-white rounded p-3">
-                      <p className="text-xs text-gray-600">Skin Tone</p>
-                      <p className="font-semibold text-gray-900">{results.skinTone}</p>
-                    </div>
-                  </div>
+              <div className="text-center py-12">
+                <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Sparkles className="w-8 h-8 text-purple-600" />
                 </div>
-
-                {/* Recommendations */}
-                <div className="space-y-4">
-                  <h4 className="font-semibold text-gray-900">Makeup Recommendations</h4>
-                  
-                  <div className="border-l-4 border-pink-400 pl-4 py-2">
-                    <h5 className="font-semibold text-pink-900 mb-1">💄 Lipstick</h5>
-                    <p className="text-sm text-gray-700">{results.recommendations.lipstick}</p>
-                  </div>
-
-                  <div className="border-l-4 border-purple-400 pl-4 py-2">
-                    <h5 className="font-semibold text-purple-900 mb-1">👁️ Eyeshadow</h5>
-                    <p className="text-sm text-gray-700">{results.recommendations.eyeshadow}</p>
-                  </div>
-
-                  <div className="border-l-4 border-rose-400 pl-4 py-2">
-                    <h5 className="font-semibold text-rose-900 mb-1">🌸 Blush</h5>
-                    <p className="text-sm text-gray-700">{results.recommendations.blush}</p>
-                  </div>
-
-                  <div className="border-l-4 border-blue-400 pl-4 py-2">
-                    <h5 className="font-semibold text-blue-900 mb-1">✨ Accessories</h5>
-                    <p className="text-sm text-gray-700">{results.recommendations.accessories}</p>
-                  </div>
-                </div>
-
-                <div className="mt-6 p-4 bg-green-50 rounded-lg">
-                  <p className="text-sm text-green-900">
-                    <strong>Remember:</strong> These are personalized suggestions to enhance your natural beauty. 
-                    Feel free to experiment and find what makes you feel most confident!
-                  </p>
-                </div>
+                <h4 className="text-lg font-semibold text-gray-900 mb-2">{results.message}</h4>
+                <p className="text-gray-600">{results.status}</p>
               </div>
             )}
           </div>
@@ -278,3 +341,5 @@ export default function FaceForward() {
     </div>
   );
 }
+
+export default FaceForward;
