@@ -13,7 +13,10 @@ function FaceForward() {
   const [results, setResults] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const [currentView, setCurrentView] = useState('analyze'); // 'analyze', 'subscription'
+  const [errorMessage, setErrorMessage] = useState(null);
+  const [uploadedFiles, setUploadedFiles] = useState([]);
   const fileInputRef = useRef(null);
+  const dragCounter = useRef(0);
   
   // Redux hooks
   const dispatch = useDispatch();
@@ -22,40 +25,81 @@ function FaceForward() {
   const [showAuthModal, setShowAuthModal] = useState(!user);
   const [authMode, setAuthMode] = useState('login'); // 'login' or 'signup'
 
-  const handleImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setSelectedImage(reader.result);
-        setResults(null);
-      };
-      reader.readAsDataURL(file);
+  const validateFile = (file) => {
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    
+    if (!validTypes.includes(file.type)) {
+      setErrorMessage('Invalid file type. Please upload JPG, PNG, GIF, or WebP images.');
+      return false;
     }
+    
+    if (file.size > maxSize) {
+      setErrorMessage('File is too large. Maximum size is 10MB.');
+      return false;
+    }
+    
+    setErrorMessage(null);
+    return true;
+  };
+
+  const handleImageUpload = (e) => {
+    const files = e.target.files;
+    processFiles(files);
+  };
+
+  const processFiles = (files) => {
+    const validFiles = [];
+    
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (validateFile(file)) {
+        validFiles.push(file);
+      }
+    }
+    
+    if (validFiles.length === 0) return;
+    
+    // Process the first valid file
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setSelectedImage(reader.result);
+      setResults(null);
+      setUploadedFiles([validFiles[0]]);
+    };
+    reader.onerror = () => {
+      setErrorMessage('Error reading file. Please try again.');
+    };
+    reader.readAsDataURL(validFiles[0]);
   };
 
   const handleDragOver = (e) => {
     e.preventDefault();
     e.stopPropagation();
+    dragCounter.current++;
+    setIsDragging(true);
   };
 
   const handleDragLeave = (e) => {
     e.preventDefault();
     e.stopPropagation();
+    dragCounter.current--;
+    if (dragCounter.current === 0) {
+      setIsDragging(false);
+    }
   };
 
   const handleDrop = (e) => {
     e.preventDefault();
     e.stopPropagation();
+    dragCounter.current = 0;
+    setIsDragging(false);
     
-    const file = e.dataTransfer.files[0];
-    if (file && file.type.startsWith('image/')) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setSelectedImage(reader.result);
-        setResults(null);
-      };
-      reader.readAsDataURL(file);
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      processFiles(files);
+    } else {
+      setErrorMessage('No files detected. Please drag and drop image files.');
     }
   };
 
@@ -207,21 +251,31 @@ function FaceForward() {
             </h3>
 
             {!selectedImage ? (
-              <div
-                onClick={() => fileInputRef.current?.click()}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-                className={`border-3 border-dashed rounded-xl p-12 text-center cursor-pointer transition-all ${
-                  isDragging 
-                    ? 'border-purple-500 bg-purple-100' 
-                    : 'border-purple-300 hover:border-purple-500 hover:bg-purple-50'
-                }`}
-              >
-                <Upload className="w-16 h-16 mx-auto text-purple-400 mb-4" />
-                <p className="text-gray-600 mb-2">Click to upload or drag and drop</p>
-                <p className="text-sm text-gray-500">PNG, JPG up to 10MB</p>
-              </div>
+              <>
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                  className={`border-3 border-dashed rounded-xl p-12 text-center cursor-pointer transition-all duration-300 transform ${
+                    isDragging 
+                      ? 'border-purple-500 bg-purple-100 scale-105 shadow-lg' 
+                      : 'border-purple-300 hover:border-purple-500 hover:bg-purple-50'
+                  }`}
+                >
+                  <Upload className={`w-16 h-16 mx-auto mb-4 transition-colors ${
+                    isDragging ? 'text-purple-600' : 'text-purple-400'
+                  }`} />
+                  <p className="text-gray-600 mb-2 font-medium">Click to upload or drag and drop</p>
+                  <p className="text-sm text-gray-500">PNG, JPG, GIF, WebP up to 10MB</p>
+                </div>
+                {errorMessage && (
+                  <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg flex items-start">
+                    <span className="mr-2">⚠️</span>
+                    <span className="text-sm">{errorMessage}</span>
+                  </div>
+                )}
+              </>
             ) : (
               <div className="space-y-4">
                 <div className="relative rounded-xl overflow-hidden">
@@ -233,7 +287,10 @@ function FaceForward() {
                 </div>
                 <div className="flex gap-3">
                   <button
-                    onClick={() => fileInputRef.current?.click()}
+                    onClick={() => {
+                      fileInputRef.current?.click();
+                      setErrorMessage(null);
+                    }}
                     className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
                   >
                     Change Photo
