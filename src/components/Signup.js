@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { loginStart, loginSuccess, loginFailure, clearError } from '../redux/authSlice';
 import { Mail, Lock, User, Sparkles } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { registerUser } from '../services/authApi';
 
 export default function Signup({ onSwitchToLogin }) {
   const [formData, setFormData] = useState({
@@ -18,40 +20,56 @@ export default function Signup({ onSwitchToLogin }) {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSignup = (e) => {
+  const handleSignup = async (e) => {
     e.preventDefault();
     dispatch(clearError());
 
     if (!formData.name || !formData.email || !formData.password || !formData.confirmPassword) {
-      dispatch(loginFailure('Please fill in all fields'));
+      const msg = 'Please fill in all fields';
+      dispatch(loginFailure(msg));
+      toast.error(msg);
       return;
     }
 
     if (formData.password.length < 6) {
-      dispatch(loginFailure('Password must be at least 6 characters'));
+      const msg = 'Password must be at least 6 characters';
+      dispatch(loginFailure(msg));
+      toast.error(msg);
       return;
     }
 
     if (formData.password !== formData.confirmPassword) {
-      dispatch(loginFailure('Passwords do not match'));
+      const msg = 'Passwords do not match';
+      dispatch(loginFailure(msg));
+      toast.error(msg);
       return;
     }
 
     dispatch(loginStart());
 
-    // Simulate API call
-    setTimeout(() => {
-      dispatch(
-        loginSuccess({
-          user: {
-            id: Math.random().toString(36).substr(2, 9),
-            email: formData.email,
-            name: formData.name,
-          },
-          token: 'fake-jwt-token-' + Math.random().toString(36).substr(2, 9),
-        })
-      );
-    }, 1000);
+    try {
+      const result = await registerUser(formData.name, formData.email, formData.password);
+      
+      if (result.success) {
+        // Registration successful
+        dispatch(
+          loginSuccess({
+            user: result.data.user,
+            token: result.data.token,
+          })
+        );
+        toast.success('Account created successfully! Welcome aboard!');
+      } else {
+        // Registration failed
+        const errorMsg = result.message || 'Registration failed. Please try again.';
+        dispatch(loginFailure(errorMsg));
+        toast.error(errorMsg);
+      }
+    } catch (err) {
+      const errorMsg = err.message || 'An unexpected error occurred. Please try again.';
+      dispatch(loginFailure(errorMsg));
+      toast.error(errorMsg);
+    }
   };
 
   return (

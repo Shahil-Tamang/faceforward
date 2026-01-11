@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { loginStart, loginSuccess, loginFailure, clearError } from '../redux/authSlice';
 import { Mail, Lock, Sparkles } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { loginUser } from '../services/authApi';
 
 export default function Login({ onSwitchToSignup }) {
   const [email, setEmail] = useState('');
@@ -9,34 +11,45 @@ export default function Login({ onSwitchToSignup }) {
   const dispatch = useDispatch();
   const { isLoading, error } = useSelector((state) => state.auth);
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     dispatch(clearError());
     
     if (!email || !password) {
-      dispatch(loginFailure('Please fill in all fields'));
+      const msg = 'Please fill in all fields';
+      dispatch(loginFailure(msg));
+      toast.error(msg);
       return;
     }
 
     dispatch(loginStart());
     
-    // Simulate API call
-    setTimeout(() => {
-      if (email && password.length >= 6) {
+    try {
+      const result = await loginUser(email, password);
+      console.log('Login result:', result);
+      
+      if (result.success) {
+        // Login successful
         dispatch(
           loginSuccess({
-            user: {
-              id: Math.random().toString(36).substr(2, 9),
-              email,
-              name: email.split('@')[0],
-            },
-            token: 'fake-jwt-token-' + Math.random().toString(36).substr(2, 9),
+            user: result.data.user,
+            token: result.data.token,
           })
         );
+        toast.success(`Welcome back, ${result.data.user.name || 'User'}!`);
       } else {
-        dispatch(loginFailure('Invalid email or password'));
+        // Login failed
+        const errorMsg = result.message || 'Login failed. Please try again.';
+        console.log('Login error:', errorMsg);
+        dispatch(loginFailure(errorMsg));
+        toast.error(errorMsg);
       }
-    }, 1000);
+    } catch (err) {
+      console.error('Login exception:', err);
+      const errorMsg = err.message || 'An unexpected error occurred. Please try again.';
+      dispatch(loginFailure(errorMsg));
+      toast.error(errorMsg);
+    }
   };
 
   return (

@@ -1,6 +1,9 @@
 import React, { useState, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Camera, Upload, Sparkles, Eye, Smile, LogOut, CreditCard } from 'lucide-react';
+import { Toaster } from 'react-hot-toast';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import Login from './components/Login';
 import Signup from './components/Signup';
 import SubscriptionPlans from './components/SubscriptionPlans';
@@ -53,7 +56,7 @@ function FaceForward() {
       const reader = new FileReader();
       reader.onloadend = () => {
         setSelectedImage(reader.result);
-        setResults(null);
+        setResults(null); 
       };
       reader.readAsDataURL(file);
     }
@@ -88,19 +91,20 @@ function FaceForward() {
 
   // Show auth modal if not logged in
   if (showAuthModal && !user) {
-    if (authMode === 'login') {
-      return (
-        <Login
-          onSwitchToSignup={() => setAuthMode('signup')}
-        />
-      );
-    } else {
-      return (
-        <Signup
-          onSwitchToLogin={() => setAuthMode('login')}
-        />
-      );
-    }
+    return (
+      <div className="min-h-screen">
+        <Toaster position="top-right" reverseOrder={false} />
+        {authMode === 'login' ? (
+          <Login
+            onSwitchToSignup={() => setAuthMode('signup')}
+          />
+        ) : (
+          <Signup
+            onSwitchToLogin={() => setAuthMode('login')}
+          />
+        )}
+      </div>
+    );
   }
 
   // Show subscription plans if that view is selected
@@ -138,6 +142,19 @@ function FaceForward() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50">
+      <Toaster position="top-right" reverseOrder={false} />
+      <ToastContainer
+        position="top-right"
+        autoClose={4000}
+        hideProgressBar={false}
+        newestOnTop={true}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
       {/* Header */}
       <header className="bg-white shadow-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
