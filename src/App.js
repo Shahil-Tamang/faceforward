@@ -6,7 +6,7 @@ import Signup from './components/Signup';
 import SubscriptionPlans from './components/SubscriptionPlans';
 import { logout } from './redux/authSlice';
 import { decrementAnalyses } from './redux/subscriptionSlice';
-import { Toaster, toast } from 'react-hot-toast';
+import { toast } from 'react-hot-toast';
 
 function FaceForward() {
   const [selectedImage, setSelectedImage] = useState(null);
@@ -262,8 +262,8 @@ function FaceForward() {
                     onDragLeave={handleDragLeave}
                     onDrop={handleDrop}
                     className={`border-3 border-dashed rounded-xl p-12 text-center cursor-pointer transition-all duration-300 transform ${isDragging
-                        ? 'border-purple-500 bg-purple-100 scale-105 shadow-lg'
-                        : 'border-purple-300 hover:border-purple-500 hover:bg-purple-50'
+                      ? 'border-purple-500 bg-purple-100 scale-105 shadow-lg'
+                      : 'border-purple-300 hover:border-purple-500 hover:bg-purple-50'
                       }`}
                   >
                     <Upload className={`w-16 h-16 mx-auto mb-4 transition-colors ${isDragging ? 'text-purple-600' : 'text-purple-400'
@@ -404,7 +404,6 @@ function FaceForward() {
   return (
     <>
       {renderContent()}
-      <Toaster position="top-center" />
     </>
   );
 }
