@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { loginStart, loginSuccess, loginFailure, clearError } from '../redux/authSlice';
+import { loginStart, loginSuccess, loginFailure, clearError, stopLoading } from '../redux/authSlice';
 import { Mail, Lock, User, Sparkles } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { registerUser } from '../services/authApi';
 
 export default function Signup({ onSwitchToLogin }) {
   const [formData, setFormData] = useState({
@@ -18,7 +20,7 @@ export default function Signup({ onSwitchToLogin }) {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSignup = (e) => {
+  const handleSignup = async (e) => {
     e.preventDefault();
     dispatch(clearError());
 
@@ -39,19 +41,21 @@ export default function Signup({ onSwitchToLogin }) {
 
     dispatch(loginStart());
 
-    // Simulate API call
-    setTimeout(() => {
-      dispatch(
-        loginSuccess({
-          user: {
-            id: Math.random().toString(36).substr(2, 9),
-            email: formData.email,
-            name: formData.name,
-          },
-          token: 'fake-jwt-token-' + Math.random().toString(36).substr(2, 9),
-        })
-      );
-    }, 1000);
+    try {
+      const response = await registerUser(formData.name, formData.email, formData.password);
+
+      if (response.success) {
+        toast.success(`Account created! Please log in.`);
+        dispatch(stopLoading());
+        onSwitchToLogin();
+      } else {
+        dispatch(loginFailure(response.message));
+        toast.error(response.message);
+      }
+    } catch (err) {
+      dispatch(loginFailure('An unexpected error occurred'));
+      toast.error('An unexpected error occurred');
+    }
   };
 
   return (

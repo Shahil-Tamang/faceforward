@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+// import { loginStart, loginSuccess, loginFailure, clearError } from '../redux/authSlice';
 import { loginStart, loginSuccess, loginFailure, clearError } from '../redux/authSlice';
 import { Mail, Lock, Sparkles } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { loginUser } from '../services/authApi';
 
 export default function Login({ onSwitchToSignup }) {
   const [email, setEmail] = useState('');
@@ -9,34 +12,34 @@ export default function Login({ onSwitchToSignup }) {
   const dispatch = useDispatch();
   const { isLoading, error } = useSelector((state) => state.auth);
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     dispatch(clearError());
-    
+
     if (!email || !password) {
       dispatch(loginFailure('Please fill in all fields'));
       return;
     }
 
     dispatch(loginStart());
-    
-    // Simulate API call
-    setTimeout(() => {
-      if (email && password.length >= 6) {
-        dispatch(
-          loginSuccess({
-            user: {
-              id: Math.random().toString(36).substr(2, 9),
-              email,
-              name: email.split('@')[0],
-            },
-            token: 'fake-jwt-token-' + Math.random().toString(36).substr(2, 9),
-          })
-        );
+
+    try {
+      const response = await loginUser(email, password);
+
+      if (response.success) {
+        dispatch(loginSuccess({
+          user: response.data.user,
+          token: response.data.token
+        }));
+        toast.success(`Welcome back, ${response.data.user.name}!`);
       } else {
-        dispatch(loginFailure('Invalid email or password'));
+        dispatch(loginFailure(response.message));
+        toast.error(response.message);
       }
-    }, 1000);
+    } catch (err) {
+      dispatch(loginFailure('An unexpected error occurred'));
+      toast.error('An unexpected error occurred');
+    }
   };
 
   return (
