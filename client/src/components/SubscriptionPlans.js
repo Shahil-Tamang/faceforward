@@ -20,7 +20,7 @@ export default function SubscriptionPlans() {
         'Standard support',
         'Web access only',
       ],
-      color: 'purple',
+      color: 'blue',
       value: 'free',
     },
     {
@@ -70,30 +70,26 @@ export default function SubscriptionPlans() {
 
   const getColorClasses = (color) => {
     const colors = {
-      purple: 'border-purple-200 hover:border-purple-400 hover:shadow-purple-200',
-      pink: 'border-pink-200 hover:border-pink-400 hover:shadow-pink-200',
       blue: 'border-blue-200 hover:border-blue-400 hover:shadow-blue-200',
+      pink: 'border-pink-200 hover:border-pink-400 hover:shadow-pink-200',
     };
     return colors[color];
   };
 
   const getButtonClasses = (color, isActive) => {
     const colors = {
-      purple: isActive
-        ? 'bg-purple-600 text-white'
-        : 'bg-purple-50 text-purple-600 hover:bg-purple-100',
-      pink: isActive
-        ? 'bg-pink-600 text-white'
-        : 'bg-pink-50 text-pink-600 hover:bg-pink-100',
       blue: isActive
         ? 'bg-blue-600 text-white'
         : 'bg-blue-50 text-blue-600 hover:bg-blue-100',
+      pink: isActive
+        ? 'bg-pink-600 text-white'
+        : 'bg-pink-50 text-pink-600 hover:bg-pink-100',
     };
     return colors[color];
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 py-16 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-sky-50 to-blue-100 py-16 px-4">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="text-center mb-12">
@@ -120,7 +116,7 @@ export default function SubscriptionPlans() {
               >
                 {/* Popular Badge */}
                 {pricingPlan.popular && (
-                  <div className="absolute top-0 right-0 bg-gradient-to-r from-pink-500 to-purple-500 text-white px-4 py-1 text-sm font-semibold rounded-bl-lg">
+                  <div className="absolute top-0 right-0 bg-gradient-to-r from-pink-500 to-blue-500 text-white px-4 py-1 text-sm font-semibold rounded-bl-lg">
                     Most Popular
                   </div>
                 )}
@@ -128,22 +124,20 @@ export default function SubscriptionPlans() {
                 <div className="p-8">
                   {/* Icon */}
                   <div
-                    className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 ${
-                      pricingPlan.color === 'purple'
-                        ? 'bg-purple-100'
+                    className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 ${pricingPlan.color === 'blue'
+                        ? 'bg-blue-100'
                         : pricingPlan.color === 'pink'
-                        ? 'bg-pink-100'
-                        : 'bg-blue-100'
-                    }`}
+                          ? 'bg-pink-100'
+                          : 'bg-blue-100'
+                      }`}
                   >
                     <Icon
-                      className={`w-6 h-6 ${
-                        pricingPlan.color === 'purple'
-                          ? 'text-purple-600'
+                      className={`w-6 h-6 ${pricingPlan.color === 'blue'
+                          ? 'text-blue-600'
                           : pricingPlan.color === 'pink'
-                          ? 'text-pink-600'
-                          : 'text-blue-600'
-                      }`}
+                            ? 'text-pink-600'
+                            : 'text-blue-600'
+                        }`}
                     />
                   </div>
 
