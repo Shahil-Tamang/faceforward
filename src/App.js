@@ -28,10 +28,10 @@ function FaceForward() {
 
   const validateFile = (file) => {
     const maxSize = 10 * 1024 * 1024; // 10MB
-    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    const validTypes = ['image/jpeg', 'image/png'];
 
     if (!validTypes.includes(file.type)) {
-      setErrorMessage('Invalid file type. Please upload JPG, PNG, GIF, or WebP images.');
+      setErrorMessage('Invalid file type. Please upload JPG or PNG images.');
       return false;
     }
 
@@ -61,17 +61,53 @@ function FaceForward() {
 
     if (validFiles.length === 0) return;
 
-    // Process the first valid file
+    const file = validFiles[0];
     const reader = new FileReader();
-    reader.onloadend = () => {
-      setSelectedImage(reader.result);
-      setResults(null);
-      setUploadedFiles([validFiles[0]]);
+
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+
+        // Set fixed dimensions
+        canvas.width = 512;
+        canvas.height = 512;
+
+        // Draw image resized to 512x512
+        ctx.drawImage(img, 0, 0, 512, 512);
+
+        // Convert back to base64
+        const resizedImageBase64 = canvas.toDataURL('image/jpeg', 0.9);
+
+        // Convert base64 to File object for upload
+        canvas.toBlob((blob) => {
+          if (blob) {
+            const resizedFile = new File([blob], file.name.replace(/\.[^/.]+$/, ".jpg"), {
+              type: 'image/jpeg',
+              lastModified: Date.now(),
+            });
+
+            setSelectedImage(resizedImageBase64);
+            setResults(null);
+            setUploadedFiles([resizedFile]);
+            setErrorMessage(null); // Clear any previous errors
+          }
+        }, 'image/jpeg', 0.9);
+      };
+
+      img.onerror = () => {
+        setErrorMessage('Error loading image. Please try another file.');
+      };
+
+      img.src = event.target.result;
     };
+
     reader.onerror = () => {
       setErrorMessage('Error reading file. Please try again.');
     };
-    reader.readAsDataURL(validFiles[0]);
+
+    reader.readAsDataURL(file);
   };
 
   const handleDragOver = (e) => {
@@ -153,7 +189,7 @@ function FaceForward() {
     // Show subscription plans if that view is selected
     if (currentView === 'subscription') {
       return (
-        <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50">
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-sky-50 to-blue-100">
           {/* Header */}
           <header className="bg-white shadow-sm sticky top-0 z-50">
             <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
@@ -162,7 +198,7 @@ function FaceForward() {
                   onClick={() => setCurrentView('analyze')}
                   className="flex items-center space-x-2 hover:opacity-70"
                 >
-                  <Sparkles className="w-8 h-8 text-purple-600" />
+                  <Sparkles className="w-8 h-8 text-blue-600" />
                   <h1 className="text-2xl font-bold text-gray-900">FaceForward</h1>
                 </button>
                 <div className="flex items-center space-x-4">
@@ -185,7 +221,7 @@ function FaceForward() {
 
     // Main view
     return (
-      <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-sky-50 to-blue-100">
         {/* Header */}
         <header className="bg-white shadow-sm sticky top-0 z-50">
           <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
@@ -194,14 +230,14 @@ function FaceForward() {
                 onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
                 className="flex items-center space-x-2 hover:opacity-70 transition-opacity"
               >
-                <Sparkles className="w-8 h-8 text-purple-600" />
+                <Sparkles className="w-8 h-8 text-blue-600" />
                 <h1 className="text-2xl font-bold text-gray-900">FaceForward</h1>
               </button>
 
               <div className="flex items-center space-x-4">
                 {/* Plan Badge */}
-                <div className="hidden sm:block px-4 py-2 bg-purple-50 rounded-lg">
-                  <p className="text-xs text-gray-600">Plan: <span className="font-bold text-purple-600 capitalize">{plan}</span></p>
+                <div className="hidden sm:block px-4 py-2 bg-blue-50 rounded-lg">
+                  <p className="text-xs text-gray-600">Plan: <span className="font-bold text-blue-600 capitalize">{plan}</span></p>
                   {plan !== 'enterprise' && (
                     <p className="text-xs text-gray-600">Analyses: <span className="font-bold">{analysesRemaining}/{maxAnalysesPerMonth}</span></p>
                   )}
@@ -250,7 +286,7 @@ function FaceForward() {
             {/* Upload Section */}
             <div className="bg-white rounded-2xl shadow-lg p-8">
               <h3 className="text-xl font-semibold mb-6 flex items-center">
-                <Camera className="w-6 h-6 mr-2 text-purple-600" />
+                <Camera className="w-6 h-6 mr-2 text-blue-600" />
                 Upload Your Photo
               </h3>
 
@@ -262,14 +298,14 @@ function FaceForward() {
                     onDragLeave={handleDragLeave}
                     onDrop={handleDrop}
                     className={`border-3 border-dashed rounded-xl p-12 text-center cursor-pointer transition-all duration-300 transform ${isDragging
-                      ? 'border-purple-500 bg-purple-100 scale-105 shadow-lg'
-                      : 'border-purple-300 hover:border-purple-500 hover:bg-purple-50'
+                      ? 'border-blue-500 bg-blue-100 scale-105 shadow-lg'
+                      : 'border-blue-300 hover:border-blue-500 hover:bg-blue-50'
                       }`}
                   >
-                    <Upload className={`w-16 h-16 mx-auto mb-4 transition-colors ${isDragging ? 'text-purple-600' : 'text-purple-400'
+                    <Upload className={`w-16 h-16 mx-auto mb-4 transition-colors ${isDragging ? 'text-blue-600' : 'text-blue-400'
                       }`} />
                     <p className="text-gray-600 mb-2 font-medium">Click to upload or drag and drop</p>
-                    <p className="text-sm text-gray-500">PNG, JPG, GIF, WebP up to 10MB</p>
+                    <p className="text-sm text-gray-500">PNG, JPG up to 10MB</p>
                   </div>
                   {errorMessage && (
                     <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg flex items-start">
@@ -300,7 +336,7 @@ function FaceForward() {
                     <button
                       onClick={analyzeImage}
                       disabled={analyzing}
-                      className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:bg-purple-400 disabled:cursor-not-allowed"
+                      className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-blue-400 disabled:cursor-not-allowed"
                     >
                       {analyzing ? 'Analyzing...' : 'Analyze Features'}
                     </button>
@@ -331,13 +367,13 @@ function FaceForward() {
             {/* Results Section */}
             <div className="bg-white rounded-2xl shadow-lg p-8">
               <h3 className="text-xl font-semibold mb-6 flex items-center">
-                <Sparkles className="w-6 h-6 mr-2 text-purple-600" />
+                <Sparkles className="w-6 h-6 mr-2 text-blue-600" />
                 Your Personalized Recommendations
               </h3>
 
               {analyzing && (
                 <div className="flex flex-col items-center justify-center py-12">
-                  <div className="animate-spin rounded-full h-16 w-16 border-4 border-purple-200 border-t-purple-600 mb-4"></div>
+                  <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-200 border-t-blue-600 mb-4"></div>
                   <p className="text-gray-600">Analyzing your facial features...</p>
                 </div>
               )}
@@ -351,8 +387,8 @@ function FaceForward() {
 
               {results && !analyzing && (
                 <div className="text-center py-12">
-                  <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Sparkles className="w-8 h-8 text-purple-600" />
+                  <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Sparkles className="w-8 h-8 text-blue-600" />
                   </div>
                   <h4 className="text-lg font-semibold text-gray-900 mb-2">{results.message}</h4>
                   <p className="text-gray-600">{results.status}</p>
@@ -364,8 +400,8 @@ function FaceForward() {
           {/* Features Section */}
           <div className="mt-16 grid md:grid-cols-3 gap-6">
             <div className="bg-white rounded-xl shadow p-6 text-center">
-              <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Eye className="w-6 h-6 text-purple-600" />
+              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Eye className="w-6 h-6 text-blue-600" />
               </div>
               <h3 className="font-semibold text-gray-900 mb-2">Facial Analysis</h3>
               <p className="text-sm text-gray-600">Advanced AI detection of 68+ facial landmarks</p>
