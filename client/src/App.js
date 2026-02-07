@@ -347,7 +347,7 @@ function FaceForward() {
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="image/*"
+                accept=".jpg,.jpeg,.png,image/jpeg,image/png"
                 onChange={handleImageUpload}
                 className="hidden"
               />

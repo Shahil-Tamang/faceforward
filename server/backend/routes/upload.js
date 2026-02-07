@@ -15,10 +15,37 @@ const storage = multer.diskStorage({
   },
 });
 
-const upload = multer({ storage });
+// File filter to only allow JPG and PNG images
+const fileFilter = (req, file, cb) => {
+  const allowedTypes = ['image/jpeg', 'image/png'];
+  if (allowedTypes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error('Invalid file type. Only JPG and PNG images are allowed.'), false);
+  }
+};
+
+const upload = multer({
+  storage,
+  fileFilter,
+  limits: {
+    fileSize: 10 * 1024 * 1024 // 10MB limit
+  }
+});
 
 // POST image
-router.post("/", upload.single("image"), async (req, res) => {
+router.post("/", (req, res, next) => {
+  upload.single("image")(req, res, (err) => {
+    if (err) {
+      // Handle multer errors (file type, size, etc.)
+      if (err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(400).json({ message: "File is too large. Maximum size is 10MB." });
+      }
+      return res.status(400).json({ message: err.message || "File upload error" });
+    }
+    next();
+  });
+}, async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: "No file uploaded" });
