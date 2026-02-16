@@ -57,7 +57,7 @@ const Login = ({ onSwitchToSignup }) => {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundImage: 'url(/login-bg.jpg)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
       <div className="relative z-10 w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden animate-fade-in mx-4">
-        <div className="p-8 text-center text-white bg-gradient-to-r from-blue-900 to-blue-800">
+        <div className="p-8 text-center text-white bg-gradient-to-r from-pink-400 to-pink-300">
           <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 backdrop-blur-sm">
             <Sparkles className="w-8 h-8 text-white" />
           </div>
@@ -85,7 +85,7 @@ const Login = ({ onSwitchToSignup }) => {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all outline-none"
+                    className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-pink-400 focus:border-transparent transition-all outline-none"
                     placeholder="you@example.com"
                     required
                   />
@@ -102,7 +102,7 @@ const Login = ({ onSwitchToSignup }) => {
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all outline-none"
+                    className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-pink-400 focus:border-transparent transition-all outline-none"
                     placeholder="••••••••"
                     required
                   />
@@ -113,7 +113,7 @@ const Login = ({ onSwitchToSignup }) => {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-[1.02] shadow-lg hover:shadow-blue-500/30 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center"
+              className="w-full bg-pink-500 hover:bg-pink-600 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-[1.02] shadow-lg hover:shadow-pink-400/30 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center"
             >
               {isLoading ? (
                 <>
@@ -131,7 +131,7 @@ const Login = ({ onSwitchToSignup }) => {
               Don't have an account?{' '}
               <button
                 onClick={onSwitchToSignup}
-                className="text-blue-600 font-semibold hover:text-blue-700 transition-colors"
+                className="text-pink-500 font-semibold hover:text-pink-600 transition-colors"
               >
                 Create Account
               </button>
